@@ -1,0 +1,74 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "yt-dlp-anikoto"
+dynamic = ["version"]
+requires-python = ">=3.10"
+readme = "README.md"
+description = "yt-dlp extractor for anikoto.cz"
+authors = [{ name = "Asep5K" }, { email = "asepdev.git@gmail.com" }]
+maintainers = [
+    { name = "asepsukasusunirvatia", email = "asepdev.git@gmail.com" },
+]
+keywords = ["yt-dlp", "yt-dlp-plugins"]
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+]
+
+dependencies = ["yt-dlp[default]>=2025.12.08"]
+
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
+
+[tool.hatch.version]
+path = "yt_dlp_plugins/extractor/anikoto.py"
+pattern = "__version__ = '(?P<version>[^']+)'"
+
+[project.urls]
+Homepage = "https://github.com/yt-dlp-plugins/yt-dlp-anikoto"
+Repository = "https://github.com/yt-dlp-plugins/yt-dlp-anikoto.git"
+Tracker = "https://github.com/yt-dlp-plugins/yt-dlp-anikoto/issues"
+
+[project.optional-dependencies]
+static-analysis = ["ruff>=0.15.0"]
+
+[tool.hatch.envs.hatch-static-analysis]
+detached = true
+features = ["static-analysis"]
+dependencies = []              # override hatch ruff version
+config-path = "pyproject.toml"
+
+[tool.hatch.envs.hatch-static-analysis.scripts]
+format-check = "ruff format --check {args:.}"
+format-fix = "ruff format {args:.}"
+lint-check = "ruff check {args:.}"
+lint-fix = "ruff check --fix {args:.}"
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.ruff.lint.flake8-quotes]
+inline-quotes = "single"
+multiline-quotes = "single"
+docstring-quotes = "double"
+avoid-escape = false
+
+[tool.hatch.build.targets.wheel]
+packages = ["yt_dlp_plugins"]
+
+[tool.hatch.build.targets.sdist]
+only-include = ["/yt_dlp_plugins", "/LICENSE", "/README.md", "/pyproject.toml"]
