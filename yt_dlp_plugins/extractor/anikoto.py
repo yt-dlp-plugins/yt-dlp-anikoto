@@ -8,7 +8,7 @@ from yt_dlp.utils import str_to_int
 
 class AnikotoIE(InfoExtractor):
     IE_NAME = 'anikoto'
-    _VALID_URL = r'https://anikoto.cz/watch/(?P<id>[^/]+)'
+    _VALID_URL = r'https?://anikoto(?:tv)?\.(?:cz|to)/watch/(?P<id>[^/]+)'
     _HEADERS = {'x-requested-with': 'XMLHttpRequest'}
 
     eps_re = re.compile(
@@ -109,7 +109,7 @@ class AnikotoIE(InfoExtractor):
 
 class _AnikotoIE(InfoExtractor):
     IE_NAME = AnikotoIE.IE_NAME
-    _VALID_URL = r'https://(vidwish|megaplay)\.(buzz|live)/stream/s-2/(?P<id>[^/]+)/(?:h?sub|dub)'
+    _VALID_URL = r'https?://(?:vidwish|megaplay)\.(?:buzz|live)/stream/s-2/(?P<id>[^/]+)/(?:h?sub|dub)'
 
     def _real_extract(self, url: str):
         video_id = self._match_id(url)
