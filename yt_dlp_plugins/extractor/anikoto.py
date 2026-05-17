@@ -1,4 +1,4 @@
-__version__ = '0.0.1'
+__version__ = '0.0.2'
 
 import re
 
@@ -8,7 +8,7 @@ from yt_dlp.utils import str_to_int
 
 class AnikotoIE(InfoExtractor):
     IE_NAME = 'anikoto'
-    _VALID_URL = r'https?://anikoto(?:tv)?\.(?:cz|to)/watch/(?P<id>[^/]+)'
+    _VALID_URL = r'https?://anikoto(?:tv)?\.(?:cz|to)/watch/(?P<ptitle>[\w-]+)-(?P<id>[^/]+)'
     _HEADERS = {'x-requested-with': 'XMLHttpRequest'}
 
     eps_re = re.compile(
@@ -24,22 +24,14 @@ class AnikotoIE(InfoExtractor):
     )
 
     def _real_extract(self, url: str):
-        slug = self._match_id(url)
+        t, slug = self._match_valid_url(url).groups()
         webpage = self._download_webpage(url, slug)
         ani_id = self._html_search_regex(r'data-id="([^"]+)', webpage, 'anime id')
-        title = self._title(webpage, slug)
         return self.playlist_result(
-            entries=self._entries(ani_id, title, slug), playlist_id=ani_id, playlist_title=title
+            entries=self._entries(ani_id, (title := t.replace('-', ' '))), playlist_id=ani_id, playlist_title=title
         )
 
-    def _title(self, webpage, slug):
-        title = self._html_extract_title(webpage, default=slug)
-        title = re.sub(r'(?i)^(?:Watch\s+|Free!\s+|Anime\s+)', '', title)
-        return re.split(
-            r'(?i)\s+(?:Episode\s+\d+|Online\s+with\s+SUB|Anime\s+Online|Watch\s+Online\s+Free|\||-)', title, maxsplit=1
-        )[0].strip()
-
-    def _entries(self, ani_id, title, slug):
+    def _entries(self, ani_id, title):
         stream_ie = _MegaplayIE(self._downloader)
         for ep_info in self._get_all_episode_info(ani_id):
             new_ep_info = self._get_available_server(ep_info)
@@ -60,7 +52,8 @@ class AnikotoIE(InfoExtractor):
                     )
             yield {
                 'id': ep_info.get('ep_id'),
-                'display_id': slug,
+                'display_id': title,
+                'series': title,
                 'title': ep_info.get('ep_title', title),
                 'episode_number': str_to_int(ep_info.get('ep_num')),
                 'formats': formats,
@@ -128,27 +121,29 @@ class _MegaplayIE(InfoExtractor):
             fatal=not self.get_param('ignore_no_formats_error'),
         )
         subtitles = {}
-        if not sources:
-            return {
-                'id': data_id,
-                'title': data_id,
-                'formats': [],
-                'subtitles': subtitles,
-            }
+        defaults = {
+            'id': data_id,
+            'title': data_id,
+            'formats': [],
+            'subtitles': subtitles,
+            'http_headers': headers,
+        }
+        if not (m3url := sources.get('sources', {}).get('file') if isinstance(sources, dict) else None):
+            return defaults
+
         for subs in sources.get('tracks', []):
+            if not (url := subs.get('file')):
+                continue
             subtitles.setdefault(_Ngawi.l2s(label := subs.get('label')), []).append(
                 {
-                    'url': subs.get('file'),
+                    'url': url,
                     'name': label,
                     'http_headers': headers,
                 }
             )
         return {
-            'id': video_id,
-            'title': video_id,
-            'formats': self._extract_m3u8_formats(sources.get('sources', {}).get('file'), data_id, headers=headers),
-            'subtitles': subtitles,
-            'http_headers': headers,
+            **defaults,
+            'formats': self._extract_m3u8_formats(m3url, data_id, headers=headers),
         }
 
 
@@ -165,18 +160,22 @@ class _Ngawi:
         r'Russian': 'ru',
         r'Arabic': 'ar',
         r'Spanish.*Latin': 'es-419',
+        r'Spanish': 'es',
         r'Spanish.*(?:Spain|European|CR)': 'es-es',
         r'Portuguese.*Brazil': 'pt-br',
         r'Chinese.*Simplified': 'zh-Hans',
         r'Chinese.*Traditional': 'zh-Hant',
         r'Chinese.*Hong Kong': 'zh-hk',
         r'Chinese.*China': 'zh-cn',
+        r'Chinese': 'zh',
+        r'Korean': 'ko',
+        r'Japanese': 'ja',
     }
 
     @classmethod
     def long2short(cls, amba):
         if not amba:
-            return None
+            return 'unknown'
 
         clean_amba = re.sub(r'_+|\s+', ' ', amba).strip()
 
@@ -195,7 +194,7 @@ class _Ngawi:
 
                 return imut
 
-        return None
+        return clean_amba  # Hytam -> white
 
     @classmethod
     def l2s(cls, fuad45):

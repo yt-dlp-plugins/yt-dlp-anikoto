@@ -6,14 +6,15 @@ URLS = [
     'https://anikoto.cz/watch/an-observation-log-of-my-fiancee-who-calls-herself-a-villainess-tsjbd/ep-7',
     'https://anikoto.cz/watch/wistoria-wand-and-sword-season-2-dua04',
     'https://anikototv.to/watch/mf-ghost-2nd-season-jsbcm',
+    'https://anikototv.to/watch/devil-may-cry-vbbe5',
 ]
 
 ytdl_opts = {
     # 'listformats': True,
     # 'max_filesize': 0.1 *1024**2,
-    # 'simulate': True,
+    # 'test': True,
+    'simulate': True,
     'verbose': True,
-    'test': True,
     'playlist_items': '1-3',
     'lazy_playlist': True,
     'writesubtitles': True,
@@ -23,5 +24,8 @@ ytdl_opts = {
     'paths': {'home': 'test/anikoto'},
 }
 
-with yt_dlp.YoutubeDL(ytdl_opts) as y:
-    y.download(URLS)
+try:
+    with yt_dlp.YoutubeDL(ytdl_opts) as y:
+        y.download(URLS)
+except KeyboardInterrupt:
+    exit(0)
