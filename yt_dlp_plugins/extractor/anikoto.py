@@ -12,11 +12,15 @@ class AnikotoIE(InfoExtractor):
     _HEADERS = {'x-requested-with': 'XMLHttpRequest'}
 
     eps_re = re.compile(
-        r"""data-id="(?P<ep_id>[^"]+)"\s
-        data-num="(?P<ep_num>[^"]+)".*?
+        r"""(?xi)<li\s+title="(?P<ep_title>[^"]+)"[^>]*>
+        .*?
+        data-id="(?P<ep_id>[^"]+)"\s
+        .*?
+        data-num="(?P<ep_num>[^"]+)"
+        .*?
         data-ids="(?P<server_key>[^"]+)"
         """,
-        re.VERBOSE,
+        re.DOTALL,
     )
 
     def _real_extract(self, url: str):
@@ -24,15 +28,19 @@ class AnikotoIE(InfoExtractor):
         webpage = self._download_webpage(url, slug)
         ani_id = self._html_search_regex(r'data-id="([^"]+)', webpage, 'anime id')
         title = self._title(webpage, slug)
-        return self.playlist_result(entries=self._entries(ani_id, title), playlist_id=ani_id, playlist_title=title)
+        return self.playlist_result(
+            entries=self._entries(ani_id, title, slug), playlist_id=ani_id, playlist_title=title
+        )
 
     def _title(self, webpage, slug):
         title = self._html_extract_title(webpage, default=slug)
-        title = re.sub(r'(?i)^Watch\s+|Free!\s+|:', '', title)
-        return re.split(r'(?i)\s+(?:Episode\s+\d+|Online\s+with\s+SUB|Anime\s+Online|\||-)', title)[0].strip()
+        title = re.sub(r'(?i)^(?:Watch\s+|Free!\s+|Anime\s+)', '', title)
+        return re.split(
+            r'(?i)\s+(?:Episode\s+\d+|Online\s+with\s+SUB|Anime\s+Online|Watch\s+Online\s+Free|\||-)', title, maxsplit=1
+        )[0].strip()
 
-    def _entries(self, ani_id, title):
-        stream_ie = _AnikotoIE(self._downloader)
+    def _entries(self, ani_id, title, slug):
+        stream_ie = _MegaplayIE(self._downloader)
         for ep_info in self._get_all_episode_info(ani_id):
             new_ep_info = self._get_available_server(ep_info)
             formats = []
@@ -52,8 +60,9 @@ class AnikotoIE(InfoExtractor):
                     )
             yield {
                 'id': ep_info.get('ep_id'),
-                'title': f'{title} Episode {(ep_num := ep_info.get("ep_num"))}',
-                'episode_number': str_to_int(ep_num),
+                'display_id': slug,
+                'title': ep_info.get('ep_title', title),
+                'episode_number': str_to_int(ep_info.get('ep_num')),
                 'formats': formats,
                 'subtitles': subtitles,
             }
@@ -82,7 +91,6 @@ class AnikotoIE(InfoExtractor):
         return episode_info
 
     def _get_stream_url(self, epinfo):
-        seen = set()
         for server_id in epinfo.get('servers', []):
             response = self._call_api(
                 url='https://anikoto.cz/ajax/server/',
@@ -90,51 +98,45 @@ class AnikotoIE(InfoExtractor):
                 note='Downloading stream server',
                 query={'get': server_id},
             )
-
             if not (url := response.get('url')) or len(parts := url.rsplit('/', 2)) < 3:
                 continue
-
-            video_id = parts[1]
-            subdub = parts[2]
-            if (s := f'{video_id}-{subdub}') in seen:
-                continue
-            seen.add(s)
-
             yield {
                 'url': url,
-                'type': subdub,
+                'type': parts[2],
                 **epinfo,
             }
 
 
-class _AnikotoIE(InfoExtractor):
+class _MegaplayIE(InfoExtractor):
+    """PRIVATE CLASS"""
+
     IE_NAME = AnikotoIE.IE_NAME
-    _VALID_URL = r'https?://(?:vidwish|megaplay)\.(?:buzz|live)/stream/s-2/(?P<id>[^/]+)/(?:h?sub|dub)'
+    _VALID_URL = (
+        r'https?://(?:vidwish|megaplay)\.(?:buzz|live)/stream/s-2/(?P<id>[^/]+)/(?:h?sub|dub)(?:\?autostart=true)?'
+    )
 
     def _real_extract(self, url: str):
         video_id = self._match_id(url)
         webpage = self._download_webpage(url, video_id, headers={'referer': 'https://anikoto.cz/'})
         data_id = self._html_search_regex(r'data-id="([^"]+)"', webpage, 'data id')
-        base_url = url.rsplit('/', 4)[0]
-        headers = {'referer': f'{base_url}/'}
+        headers = {'referer': (base_url := url.rsplit('/', 4)[0]) + '/', 'x-requested-with': 'XMLHttpRequest'}
         sources = self._download_json(
-            url_or_request=f'{base_url}/stream/getSources',
+            url_or_request=f'{base_url}/stream/getSources?id={data_id}',
             video_id=data_id,
             note='Downloading sources',
-            query={'id': data_id},
             headers=headers,
             fatal=not self.get_param('ignore_no_formats_error'),
         )
+        subtitles = {}
         if not sources:
             return {
                 'id': data_id,
                 'title': data_id,
                 'formats': [],
+                'subtitles': subtitles,
             }
-
-        subtitles = {}
         for subs in sources.get('tracks', []):
-            subtitles.setdefault(Ngawi.l2s(label := subs.get('label')), []).append(
+            subtitles.setdefault(_Ngawi.l2s(label := subs.get('label')), []).append(
                 {
                     'url': subs.get('file'),
                     'name': label,
@@ -150,7 +152,7 @@ class _AnikotoIE(InfoExtractor):
         }
 
 
-class Ngawi:
+class _Ngawi:
     _patterns = {
         r'English': 'en',
         r'Indonesian': 'id',
