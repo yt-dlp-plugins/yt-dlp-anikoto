@@ -1,4 +1,13 @@
+<div align="center">
+  <a href="https://wakatime.com/badge/user/aa610271-8ab2-4662-aa49-e4027d62a6c4/project/4989cc49-1882-4a69-99f3-cf3df2d4b951">
+    <img src="https://wakatime.com/badge/user/aa610271-8ab2-4662-aa49-e4027d62a6c4/project/4989cc49-1882-4a69-99f3-cf3df2d4b951.svg?style=for-the-badge" alt="wakatime">
+  </a>
+
+  <h3>Work in progress, doesn't fully work yet</h3>
+</div>
+
 This is a [yt-dlp](https://github.com/yt-dlp/yt-dlp "yt-dlp repooository") extractor plugin for [anikoto](https://anikoto.cz/ "anikonto"). It supports downloading single episodes and full playlists.
+
 
 ## Installation
 ```bash
@@ -9,24 +18,11 @@ python -m pip install -U 'https://github.com/yt-dlp-plugins/yt-dlp-anikoto/archi
 ## Usage
 
 ```bash
-yt-dlp 'https://anikoto.cz/watch/scum-of-the-brave-g8k68'
+yt-dlp 'https://anikoto.cz/watch/please-put-them-on-takamine-san-pfv4v/ep-10'
 ```
-## Support the Project ☕
-**If this extractor helps you save time, consider supporting its maintenance**:
-
-<div align="left">
-
-[![Trakteer](https://img.shields.io/badge/Trakteer-F16061?style=for-the-badge&logo=buy-me-a-coffee&logoColor=white)](https://trakteer.id/asep5k) [![PayPal](https://img.shields.io/badge/PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/rezaoctavian496) [![Ko-Fi](https://img.shields.io/badge/Ko--fi-F16061?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/aspe)
-</div>
 
 ---
 
 <div align="center">
-
-<!-- > You read that correctly, this README is empty because **I'm too lazy to make one.**
-
-> **If you have some free time and aren't as lazy as I am, please open a PR with a proper README.** -->
-
-<a href="https://tenor.com/view/malas-gif-18361069424601157493" target="_blank"><img src="./test/.antekantekasync.jpg" alt="malas" title="malas" width="100%" /></a>
-
+    <img src="https://media1.tenor.com/m/WERCgarSaZ0AAAAC/aemeath-aemeath-hi.gif" alt="iwak tempek" />
 </div>
