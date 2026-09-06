@@ -5,13 +5,10 @@ build-backend = "hatchling.build"
 [project]
 name = "yt-dlp-anikoto"
 dynamic = ["version"]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 readme = "README.md"
 description = "yt-dlp extractor for anikoto.cz"
-authors = [{ name = "Asep5K" }, { email = "asepdev.git@gmail.com" }]
-maintainers = [
-    { name = "asepsukasusunirvatia", email = "asepdev.git@gmail.com" },
-]
+authors = [{ name = "Asep5K" }, { email = "Asep5K@proton.me" }]
 keywords = ["yt-dlp", "yt-dlp-plugins"]
 
 classifiers = [
@@ -26,13 +23,15 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: PyPy",
 ]
 
-dependencies = ["yt-dlp[default]>=2025.12.08"]
+dependencies = [
+    "yt-dlp[default]>=2025.12.8",
+]
 
 license = "GPL-3.0-or-later"
 license-files = ["LICENSE"]
 
 [tool.hatch.version]
-path = "yt_dlp_plugins/extractor/anikoto.py"
+path = "yt_dlp_plugins/extractor/anikoto/__init__.py"
 pattern = "__version__ = '(?P<version>[^']+)'"
 
 [project.urls]
@@ -58,6 +57,10 @@ lint-fix = "ruff check --fix {args:.}"
 [tool.ruff]
 line-length = 120
 
+[tool.ruff.lint]
+ignore = [
+"RUF012"
+]
 [tool.ruff.format]
 quote-style = "single"
 
@@ -72,3 +75,9 @@ packages = ["yt_dlp_plugins"]
 
 [tool.hatch.build.targets.sdist]
 only-include = ["/yt_dlp_plugins", "/LICENSE", "/README.md", "/pyproject.toml"]
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+typeCheckingMode = "off"
+pythonVersion = "3.11"
